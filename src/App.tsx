@@ -39,12 +39,12 @@ function App() {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [nextPage, setNextPage] = useState<number>(1);
   const PAGE_SIZE = 12;
-
-  console.log("page:", nextPage);
+  const [isLoading, setIsLoading] = useState(false);
 
   const fetchVenueData = async (venue: string, page: number) => {
     if (venue) {
       try {
+        setIsLoading(true);
         const response = await fetch(
           `${apiEndpoint}?filter[venues][]=${venue}&page[size]=${PAGE_SIZE}&page[number]=${page}`,
           {
@@ -55,6 +55,7 @@ function App() {
         );
         const data = await response.json();
         console.log(data);
+        setIsLoading(false);
         setEvents((prevEvents) => [...prevEvents, ...(data.data || [])]);
         if (data.links?.next !== null) {
           setNextPage(nextPage + 1);
@@ -109,8 +110,9 @@ function App() {
             onClick={() => {
               fetchVenueData(venue, nextPage);
             }}
+            disabled={isLoading}
           >
-            LOAD MORE
+            {isLoading ? "Loading..." : "LOAD MORE"}
           </Button>
         </div>
       )}

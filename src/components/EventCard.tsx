@@ -204,7 +204,7 @@ const EventCard = ({ event }: { event: EventItem }) => {
             ? "GET REMINDED"
             : "BOOK NOW"}
         </Button>
-        <div className="flex flex-col">
+        <div className="flex flex-col items-end">
           <span>From</span>
           <span className="font-semibold">
             {formattedPrice(
