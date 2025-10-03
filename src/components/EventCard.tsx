@@ -3,8 +3,10 @@ import { formatInTimeZone } from "date-fns-tz";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { isAfter } from "date-fns";
-import { useRef, useState } from "react";
+import { memo, useRef, useState } from "react";
 import Button from "./ui/Button";
+
+import { minBy } from "lodash";
 
 interface EventItem {
   id: string;
@@ -97,7 +99,7 @@ const EventCard = ({ event }: { event: EventItem }) => {
   };
 
   return (
-    <div className="flex flex-col space-y-2 w-[320px] min-h-[600px] max-h-[720px] items-start gap-6">
+    <div className="flex flex-col space-y-2 w-[320px] h-[640px] items-start gap-4">
       <div className="w-full relative">
         <img
           src={
@@ -136,8 +138,8 @@ const EventCard = ({ event }: { event: EventItem }) => {
           {event.location.city}, {event.location.country}
         </h4>
       </div>
-      <div className="bg-gray-100 p-4 rounded mt-auto w-full overflow-scroll">
-        <div className="flex justify-between items-center mb-2 font-semibold">
+      <div className="bg-gray-100 rounded mt-auto w-full overflow-scroll relative">
+        <div className="flex justify-between items-center mb-2 font-semibold sticky top-0 left-0 bg-gray-100 w-full z-10 p-4">
           <p>More info</p>
           <button
             onClick={() => setShowMoreInfo(!showMoreInfo)}
@@ -147,7 +149,7 @@ const EventCard = ({ event }: { event: EventItem }) => {
           </button>
         </div>
         {showMoreInfo && (
-          <>
+          <div className="p-4">
             <Markdown remarkPlugins={[remarkGfm]}>{event.description}</Markdown>
             <DetailsSection title="LINE UP">
               {event.lineup && event.lineup.length > 0 ? (
@@ -156,7 +158,7 @@ const EventCard = ({ event }: { event: EventItem }) => {
                     <li key={idx}>
                       {entry.details}
                       {entry.time ? (
-                        <span className="text-gray-500"> - {entry.time}</span>
+                        <span className="font-semibold"> - {entry.time}</span>
                       ) : null}
                     </li>
                   ))}
@@ -172,7 +174,9 @@ const EventCard = ({ event }: { event: EventItem }) => {
                     <li key={idx}>
                       {ticket.name} -{" "}
                       <span className="font-semibold">
-                        {formattedPrice(ticket.price.face_value)}
+                        {ticket.price.face_value === 0
+                          ? "FREE"
+                          : formattedPrice(ticket.price.face_value)}
                       </span>
                       {ticket.soldout ? (
                         <span className="text-grey-500 font-semibold">
@@ -186,10 +190,10 @@ const EventCard = ({ event }: { event: EventItem }) => {
                 <p>No tickets available.</p>
               )}
             </DetailsSection>
-          </>
+          </div>
         )}
       </div>
-      <div className="flex">
+      <div className="flex justify-between w-full">
         <Button
           onClick={() => window.open(event.url, "_blank")}
           disabled={event.sold_out}
@@ -200,9 +204,20 @@ const EventCard = ({ event }: { event: EventItem }) => {
             ? "GET REMINDED"
             : "BOOK NOW"}
         </Button>
+        <div className="flex flex-col">
+          <span>From</span>
+          <span className="font-semibold">
+            {formattedPrice(
+              minBy(
+                event.ticket_types,
+                (t: EventItem["ticket_types"][number]) => t.price.face_value
+              )?.price.face_value ?? 0
+            )}
+          </span>
+        </div>
       </div>
     </div>
   );
 };
 
-export default EventCard;
+export default memo(EventCard);

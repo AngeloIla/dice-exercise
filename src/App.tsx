@@ -40,11 +40,13 @@ function App() {
   const [nextPage, setNextPage] = useState<number>(1);
   const PAGE_SIZE = 12;
 
-  const fetchVenueData = async (venue: string) => {
+  console.log("page:", nextPage);
+
+  const fetchVenueData = async (venue: string, page: number) => {
     if (venue) {
       try {
         const response = await fetch(
-          `${apiEndpoint}?filter[venues][]=${venue}&page[size]=${PAGE_SIZE}&page[number]=${nextPage}`,
+          `${apiEndpoint}?filter[venues][]=${venue}&page[size]=${PAGE_SIZE}&page[number]=${page}`,
           {
             headers: {
               "x-api-key": apiKey,
@@ -54,8 +56,10 @@ function App() {
         const data = await response.json();
         console.log(data);
         setEvents((prevEvents) => [...prevEvents, ...(data.data || [])]);
-        if (data.links?.next) {
+        if (data.links?.next !== null) {
           setNextPage(nextPage + 1);
+        } else {
+          setNextPage(1);
         }
       } catch (error) {
         console.error("Error fetching venue data:", error);
@@ -65,31 +69,49 @@ function App() {
 
   return (
     <div className="App">
-      <h1 className="text-4xl font-bold">Event Venue Finder</h1>
-      <input
-        type="text"
-        placeholder="Enter venue name"
-        value={venue}
-        onChange={(e) => setVenue(e.target.value)}
-        className="border p-2 rounded"
-      />
-      <Button onClick={() => fetchVenueData(venue)} disabled={!venue}>
-        Search
-      </Button>
-      <div className="grid gap-4 mt-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        {events.length > 0 ? (
-          <>
+      <h1 className="text-4xl font-bold">Search events by venue</h1>
+      <div className="mt-4 flex gap-2">
+        <input
+          type="text"
+          placeholder="Enter venue name"
+          value={venue}
+          onChange={(e) => setVenue(e.target.value)}
+          className="border p-2 rounded"
+        />
+        <Button
+          onClick={() => {
+            setEvents([]);
+            fetchVenueData(venue, 1);
+          }}
+          disabled={!venue}
+        >
+          Search
+        </Button>
+      </div>
+
+      {events.length > 0 ? (
+        <>
+          <h2 className="text-2xl font-bold mt-6">
+            Upcoming Events at {venue}
+          </h2>
+          <div className="grid mt-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-16">
             {events.map((event) => (
               <EventCard key={event.id} event={event} />
             ))}
-          </>
-        ) : (
-          <p>No events found.</p>
-        )}
-      </div>
-      {nextPage && (
+          </div>
+        </>
+      ) : (
+        <p>No events found.</p>
+      )}
+      {nextPage > 1 && (
         <div className="mt-6">
-          <Button onClick={() => fetchVenueData(venue)}>LOAD MORE</Button>
+          <Button
+            onClick={() => {
+              fetchVenueData(venue, nextPage);
+            }}
+          >
+            LOAD MORE
+          </Button>
         </div>
       )}
     </div>
