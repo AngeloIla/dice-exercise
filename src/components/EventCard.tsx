@@ -104,8 +104,8 @@ const EventCard = ({ event }: { event: EventItem }) => {
         <img
           src={
             showMoreInfo
-              ? event.event_images.landscape
-              : event.event_images.square
+              ? `${event.event_images.landscape}&w=320`
+              : `${event.event_images.square}&w=320`
           }
           alt={event.name}
           className="w-full h-auto object-cover"
