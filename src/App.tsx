@@ -93,7 +93,7 @@ function App() {
       {events.length > 0 ? (
         <>
           <h2 className="text-2xl font-bold mt-6">
-            Upcoming Events at {venue}
+            Upcoming Events at {events[0].venue}
           </h2>
           <div className="grid mt-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-16">
             {events.map((event) => (
@@ -105,7 +105,7 @@ function App() {
         <p>No events found.</p>
       )}
       {nextPage > 1 && (
-        <div className="mt-6">
+        <div className="mt-12 text-center">
           <Button
             onClick={() => {
               fetchVenueData(venue, nextPage);
