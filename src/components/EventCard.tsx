@@ -3,10 +3,11 @@ import { formatInTimeZone } from "date-fns-tz";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { isAfter } from "date-fns";
-import { memo, useRef, useState } from "react";
+import { memo, useMemo, useRef, useState } from "react";
 import Button from "./ui/Button";
 
 import { minBy } from "lodash";
+import Badge from "./ui/Badge";
 
 interface EventItem {
   id: string;
@@ -38,18 +39,53 @@ interface EventItem {
   url: string;
 }
 
+const CardImage = ({ src, alt }: { src: string; alt: string }) => (
+  <img src={src} alt={alt} className="w-full h-auto object-cover" />
+);
+
+const DetailsSection = ({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) => (
+  <div className="flex flex-col mt-4 gap-3">
+    <h5 className="text-blue-500">{title}</h5>
+    {children}
+  </div>
+);
+
+const OnsaleDateBadge = ({ onSaleDate }: { onSaleDate: string }) => {
+  return (
+    <Badge
+      text={`On sale ${onSaleDate}`}
+      className="bg-slate-700 absolute bottom-2 right-2 text-xs"
+    />
+  );
+};
+
 const EventCard = ({ event }: { event: EventItem }) => {
   const [showMoreInfo, setShowMoreInfo] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const formattedDate = formatInTimeZone(
-    new Date(event.date),
-    event.timezone,
-    "E dd MMMM - h:mmaaa"
+  const formattedDate = useMemo(
+    () =>
+      formatInTimeZone(
+        new Date(event.date),
+        event.timezone,
+        "E dd MMMM - h:mmaaa"
+      ),
+    [event.date, event.timezone]
   );
-  const audioTrack =
-    (event.apple_music_tracks || event.spotify_tracks)?.[0]?.preview_url ??
-    null;
+
+  const audioTrack = useMemo(
+    () =>
+      (event.apple_music_tracks || event.spotify_tracks)?.[0]?.preview_url ??
+      null,
+    [event.apple_music_tracks, event.spotify_tracks]
+  );
+
   const formattedPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -59,33 +95,10 @@ const EventCard = ({ event }: { event: EventItem }) => {
     }).format(price / 100);
   };
 
-  const DetailsSection = ({
-    title,
-    children,
-  }: {
-    title: string;
-    children: React.ReactNode;
-  }) => (
-    <div className="flex flex-col mt-4 gap-3">
-      <h5 className="text-blue-500">{title}</h5>
-      {children}
-    </div>
+  const notOnSaleYet = useMemo(
+    () => isAfter(new Date(event.sale_start_date), new Date()),
+    [event.sale_start_date]
   );
-
-  const OnsaleDateBadge = ({ date }: { date: string }) => {
-    return (
-      <span className="absolute bottom-2 right-2 bg-slate-700 text-xs text-white font-semibold px-2 py-1 z-10">
-        On sale{" "}
-        {formatInTimeZone(
-          new Date(date),
-          event.timezone,
-          "E dd MMMM - h:mmaaa"
-        )}
-      </span>
-    );
-  };
-
-  const notOnSaleYet = isAfter(new Date(event.sale_start_date), new Date());
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const togglePlayPause = () => {
@@ -101,14 +114,13 @@ const EventCard = ({ event }: { event: EventItem }) => {
   return (
     <div className="flex flex-col space-y-2 w-[320px] h-[640px] items-start gap-4">
       <div className="w-full relative">
-        <img
+        <CardImage
           src={
             showMoreInfo
               ? `${event.event_images.landscape}&w=320`
               : `${event.event_images.square}&w=320`
           }
-          alt={event.name}
-          className="w-full h-auto object-cover"
+          alt={`Poster for the event ${event.name} at ${event.venue}`}
         />
         {audioTrack && (
           <div>
@@ -119,15 +131,24 @@ const EventCard = ({ event }: { event: EventItem }) => {
               onPause={() => setIsPlaying(false)}
             >
               <source src={audioTrack} type="audio/mpeg" />
-              Your browser does not support the audio element.
             </audio>
-            <PlayButton isPlaying={isPlaying} onClick={togglePlayPause} />
+            <PlayButton
+              isPlaying={isPlaying}
+              onClick={togglePlayPause}
+              className="absolute bottom-0 left-0"
+            />
           </div>
         )}
         {notOnSaleYet ? (
-          <OnsaleDateBadge date={event.sale_start_date} />
+          <OnsaleDateBadge
+            onSaleDate={formatInTimeZone(
+              new Date(event.sale_start_date),
+              event.timezone,
+              "E dd MMM - h:mmaaa"
+            )}
+          />
         ) : event.featured ? (
-          <OnsaleDateBadge date={event.date} />
+          <Badge className="absolute bottom-2 right-2" text="FEATURED" />
         ) : null}
       </div>
       <div className="flex flex-col text-left w-full">

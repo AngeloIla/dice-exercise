@@ -1,21 +1,16 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import "./App.css";
 import EventCard from "./components/EventCard";
 import Button from "./components/ui/Button";
+
 interface EventItem {
   id: string;
   name: string;
   date: string;
   timezone: string;
   venue: string;
-  location: {
-    city: string;
-    country: string;
-  };
-  event_images: {
-    square: string;
-    landscape: string;
-  };
+  location: { city: string; country: string };
+  event_images: { square: string; landscape: string };
   description: string;
   lineup: { details: string; time?: string }[];
   ticket_types: {
@@ -33,40 +28,72 @@ interface EventItem {
 }
 
 function App() {
-  const [venue, setVenue] = useState("");
+  const [venueQuery, setVenueQuery] = useState("");
+  const [searchedVenue, setSearchedVenue] = useState("");
+  const [events, setEvents] = useState<EventItem[]>([]);
+  const [nextPageUrl, setNextPageUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const apiKey = import.meta.env.VITE_API_KEY;
   const apiEndpoint = import.meta.env.VITE_API_ENDPOINT;
-  const [events, setEvents] = useState<EventItem[]>([]);
-  const [nextPage, setNextPage] = useState<number>(1);
   const PAGE_SIZE = 12;
-  const [isLoading, setIsLoading] = useState(false);
 
-  const fetchVenueData = async (venue: string, page: number) => {
-    if (venue) {
-      try {
-        setIsLoading(true);
-        const response = await fetch(
-          `${apiEndpoint}?filter[venues][]=${venue}&page[size]=${PAGE_SIZE}&page[number]=${page}`,
-          {
-            headers: {
-              "x-api-key": apiKey,
-            },
-          }
-        );
-        const data = await response.json();
-        console.log(data);
-        setIsLoading(false);
-        setEvents((prevEvents) => [...prevEvents, ...(data.data || [])]);
-        if (data.links?.next !== null) {
-          setNextPage(nextPage + 1);
-        } else {
-          setNextPage(1);
-        }
-      } catch (error) {
-        console.error("Error fetching venue data:", error);
+  const fetchEvents = useCallback(
+    async (url: string, isNewSearch: boolean) => {
+      setIsLoading(true);
+      setError(null);
+      if (isNewSearch) {
+        setEvents([]);
       }
+
+      try {
+        const response = await fetch(url, { headers: { "x-api-key": apiKey } });
+
+        if (!response.ok) throw new Error("Network response was not ok");
+
+        const data = await response.json();
+        setEvents((prevEvents) => [...prevEvents, ...(data.data || [])]);
+        setNextPageUrl(
+          data.links?.next?.replace("events-api", "partners-endpoint") || null
+        );
+      } catch (error) {
+        console.error("Error fetching event data:", error);
+        setError("Failed to fetch events. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [apiKey]
+  );
+
+  const handleSearch = () => {
+    setSearchedVenue(venueQuery);
+    const initialUrl = `${apiEndpoint}?filter[venues][]=${venueQuery}&page[size]=${PAGE_SIZE}`;
+    fetchEvents(initialUrl, true);
+  };
+
+  const loadMore = () => {
+    if (nextPageUrl) {
+      fetchEvents(nextPageUrl, false);
     }
   };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
+  const initialMessage = !venueQuery
+    ? "Please enter a venue to search for events."
+    : isLoading
+    ? "Searching for events..."
+    : error
+    ? error
+    : events.length === 0
+    ? `No events found for "${searchedVenue}".`
+    : "";
 
   return (
     <div className="App">
@@ -74,23 +101,20 @@ function App() {
       <div className="mt-4 flex gap-2">
         <input
           type="text"
-          placeholder="Enter venue name"
-          value={venue}
-          onChange={(e) => setVenue(e.target.value)}
+          placeholder="e.g., Troxy"
+          value={venueQuery}
+          onChange={(e) => setVenueQuery(e.target.value)}
+          onKeyDown={handleKeyDown}
           className="border p-2 rounded"
         />
-        <Button
-          onClick={() => {
-            setEvents([]);
-            fetchVenueData(venue, 1);
-          }}
-          disabled={!venue}
-        >
+        <Button onClick={handleSearch} disabled={!venueQuery || isLoading}>
           Search
         </Button>
       </div>
 
-      {events.length > 0 ? (
+      {initialMessage && <p className="mt-8">{initialMessage}</p>}
+
+      {events.length > 0 && (
         <>
           <h2 className="text-2xl font-bold mt-6">
             Upcoming Events at {events[0].venue}
@@ -101,18 +125,12 @@ function App() {
             ))}
           </div>
         </>
-      ) : (
-        <p>No events found.</p>
       )}
-      {nextPage > 1 && (
+
+      {nextPageUrl && (
         <div className="mt-12 text-center">
-          <Button
-            onClick={() => {
-              fetchVenueData(venue, nextPage);
-            }}
-            disabled={isLoading}
-          >
-            {isLoading ? "Loading..." : "LOAD MORE"}
+          <Button onClick={loadMore} disabled={isLoading}>
+            {isLoading ? "Loading..." : "Load More"}
           </Button>
         </div>
       )}
