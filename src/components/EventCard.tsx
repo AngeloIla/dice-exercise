@@ -3,8 +3,6 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { memo, useState } from "react";
 import Button from "./ui/Button";
-
-import { minBy } from "lodash";
 import Badge from "./ui/Badge";
 
 import { useEventData } from "../hooks/useEventData";
@@ -102,6 +100,7 @@ const EventCard = ({ event }: { event: EventItem }) => {
     formattedPrice,
     onSaleDateFormatted,
     audioTrack,
+    price,
   } = useEventData(event);
 
   const { isPlaying, togglePlayPause, AudioPlayer } =
@@ -140,7 +139,7 @@ const EventCard = ({ event }: { event: EventItem }) => {
         country={event.location.country}
       />
       <div className="bg-gray-100 rounded mt-auto w-full overflow-scroll relative">
-        <div className="flex justify-between items-center mb-2 font-semibold sticky top-0 left-0 bg-gray-100 w-full z-10 p-4">
+        <div className="flex justify-between items-center mb-2 font-semibold sticky top-0 left-0 bg-gray-100 w-full z-10 py-2 px-4">
           <p>More info</p>
           <button
             onClick={() => setShowMoreInfo(!showMoreInfo)}
@@ -194,21 +193,14 @@ const EventCard = ({ event }: { event: EventItem }) => {
           </div>
         )}
       </div>
-      <div className="flex justify-between w-full">
+      <div className="flex justify-between w-full items-end">
         <a href={event.url} target="_blank" rel="noopener noreferrer">
           <Button disabled={event.sold_out}>{buttonText}</Button>
         </a>
 
         <div className="flex flex-col items-end">
-          <span>From</span>
-          <span className="font-semibold">
-            {formattedPrice(
-              minBy(
-                event.ticket_types,
-                (t: EventItem["ticket_types"][number]) => t.price.face_value
-              )?.price.face_value ?? 0
-            )}
-          </span>
+          {event.ticket_types.length > 1 ? <span>From</span> : null}
+          <span className="font-semibold text-lg">{price}</span>
         </div>
       </div>
     </div>

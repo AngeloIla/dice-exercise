@@ -22,7 +22,7 @@ export const useEventData = (event: EventItem) => {
   }, [sold_out, notOnSaleYet]);
 
   const formattedPrice = useMemo(() => {
-    const formatter = new Intl.NumberFormat("en-GB", {
+    const formatter = new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: currency,
       minimumFractionDigits: 2,
@@ -35,10 +35,12 @@ export const useEventData = (event: EventItem) => {
     };
   }, [currency]);
 
-  const cheapestPrice = useMemo(() => {
+  const price = useMemo(() => {
     const faceValue =
-      minBy(ticket_types, (t) => t.price.face_value)?.price.face_value ?? 0;
-    return formattedPrice(faceValue);
+      ticket_types.length > 1
+        ? minBy(ticket_types, (t) => t.price.face_value)?.price.face_value ?? 0
+        : ticket_types[0]?.price.face_value ?? 0;
+    return faceValue === 0 ? "FREE" : formattedPrice(faceValue);
   }, [ticket_types, formattedPrice]);
 
   const onSaleDateFormatted = useMemo(() => {
@@ -61,7 +63,7 @@ export const useEventData = (event: EventItem) => {
     formattedDate,
     notOnSaleYet,
     buttonText,
-    cheapestPrice,
+    price,
     formattedPrice,
     onSaleDateFormatted,
     audioTrack,
