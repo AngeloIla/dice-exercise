@@ -11,7 +11,7 @@ import EventCardFooter from "./EventCardFooter";
 import type { EventItem } from "../types/EventItem";
 
 const CardContainer = ({ children }: { children: React.ReactNode }) => (
-  <div className="flex flex-col space-y-2 w-[320px] h-[640px] items-start gap-4">
+  <div className="flex flex-col w-[320px] h-[640px] items-start gap-4">
     {children}
   </div>
 );
@@ -52,7 +52,7 @@ const MoreInfoBanner = ({
   isOpen: boolean;
 }) => {
   return (
-    <div className="flex justify-between items-center mb-2 font-semibold sticky top-0 left-0 bg-gray-100 w-full z-10 py-2 px-4">
+    <div className="flex justify-between items-center font-semibold sticky top-0 left-0 bg-gray-100 w-full z-10 p-4">
       <p>More info</p>
       <button onClick={onClick} className="px-2">
         {isOpen ? "-" : "+"}
@@ -94,7 +94,7 @@ const EventCard = ({ event }: { event: EventItem }) => {
             onClick={togglePlayPause}
           />
         )}
-        {notOnSaleYet ? (
+        {notOnSaleYet && onSaleDateFormatted ? (
           <OnsaleDateBadge onSaleDate={onSaleDateFormatted} />
         ) : event.featured ? (
           <Badge className="absolute bottom-2 right-2" text={"FEATURED"} />
@@ -137,9 +137,9 @@ const EventCard = ({ event }: { event: EventItem }) => {
                     <li key={ticket.name}>
                       {ticket.name} -{" "}
                       <span className="font-semibold">
-                        {ticket.price.face_value === 0
+                        {ticket.price.total === 0
                           ? "FREE"
-                          : formattedPrice(ticket.price.face_value)}
+                          : formattedPrice(ticket.price.total)}
                       </span>{" "}
                       {ticket.sold_out ? (
                         <span className="text-grey-500">SOLD OUT</span>

@@ -16,7 +16,7 @@ export interface EventItem {
   lineup: { details: string; time?: string }[];
   ticket_types: {
     name: string;
-    price: { face_value: number };
+    price: { total: number };
     sold_out: boolean;
   }[];
   currency: string;

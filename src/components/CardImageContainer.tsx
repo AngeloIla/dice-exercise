@@ -13,7 +13,7 @@ const CardImageContainer = ({
 }: CardImageContainerProps) => {
   return (
     <div className="relative w-full h-[320px]">
-      <img src={src} alt={alt} className="w-full h-full object-cover" />
+      <img src={src} alt={alt} className="w-full h-auto object-cover" />
       {children}
     </div>
   );

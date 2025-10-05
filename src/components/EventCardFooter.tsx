@@ -22,8 +22,8 @@ const EventCardFooter = ({
       </a>
 
       <div className="flex flex-col items-end">
-        {hasMultipleTickets && <span>From</span>}
-        <span className="font-semibold text-lg">{price}</span>
+        {hasMultipleTickets && <span className="text-gray-500">From</span>}
+        <span className="text-3xl">{price}</span>
       </div>
     </div>
   );

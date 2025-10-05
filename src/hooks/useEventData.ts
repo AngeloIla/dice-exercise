@@ -38,17 +38,20 @@ export const useEventData = (event: EventItem) => {
   const price = useMemo(() => {
     const faceValue =
       ticket_types.length > 1
-        ? minBy(ticket_types, (t) => t.price.face_value)?.price.face_value ?? 0
-        : ticket_types[0]?.price.face_value ?? 0;
+        ? minBy(ticket_types, (t) => t.price.total)?.price.total ?? 0
+        : ticket_types[0]?.price.total ?? 0;
     return faceValue === 0 ? "FREE" : formattedPrice(faceValue);
   }, [ticket_types, formattedPrice]);
 
   const onSaleDateFormatted = useMemo(() => {
-    return formatInTimeZone(
-      new Date(sale_start_date),
-      timezone,
-      "E dd MMM - h:mmaaa"
-    );
+    if (notOnSaleYet) {
+      return formatInTimeZone(
+        new Date(sale_start_date),
+        timezone,
+        "E dd MMM - h:mmaaa"
+      );
+    }
+    return null;
   }, [sale_start_date, timezone]);
 
   const audioTrack = useMemo(
