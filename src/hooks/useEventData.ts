@@ -52,7 +52,7 @@ export const useEventData = (event: EventItem) => {
       );
     }
     return null;
-  }, [sale_start_date, timezone]);
+  }, [notOnSaleYet, sale_start_date, timezone]);
 
   const audioTrack = useMemo(
     () =>
