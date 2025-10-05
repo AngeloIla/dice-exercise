@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { formatInTimeZone } from "date-fns-tz";
 import { isAfter } from "date-fns";
 import { minBy } from "lodash";
-import type { EventItem } from "../components/EventCard";
+import type { EventItem } from "../types/EventItem";
 
 export const useEventData = (event: EventItem) => {
   const { date, timezone, currency, sale_start_date, sold_out, ticket_types } =
