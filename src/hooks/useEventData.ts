@@ -36,11 +36,9 @@ export const useEventData = (event: EventItem) => {
   }, [currency]);
 
   const price = useMemo(() => {
-    const faceValue =
-      ticket_types.length > 1
-        ? minBy(ticket_types, (t) => t.price.total)?.price.total ?? 0
-        : ticket_types[0]?.price.total ?? 0;
-    return faceValue === 0 ? "FREE" : formattedPrice(faceValue);
+    const priceValue =
+      minBy(ticket_types, (t) => t.price.total)?.price.total ?? 0;
+    return priceValue === 0 ? "FREE" : formattedPrice(priceValue);
   }, [ticket_types, formattedPrice]);
 
   const onSaleDateFormatted = useMemo(() => {
